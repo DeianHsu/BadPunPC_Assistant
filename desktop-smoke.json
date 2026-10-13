@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "运行控制",
+    "视觉模型（VLM）配置"
+  ],
+  "thinking_enabled": false,
+  "config_roundtrip": true,
+  "frida_version": "17.23.3",
+  "pillow_available": true,
+  "agent_resource": true,
+  "bridge_resource": true
+}

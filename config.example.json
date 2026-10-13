@@ -1,0 +1,18 @@
+{
+  "game_process": "BadPunPC.exe",
+  "host": "127.0.0.1",
+  "port": 18741,
+  "model_base_url": "https://api.deepseek.com",
+  "model": "deepseek-flash",
+  "provider": "deepseek",
+  "temperature": 0.2,
+  "api_key_env": "DEEPSEEK_API_KEY",
+  "api_key": "",
+  "thinking_enabled": false,
+  "reasoning_effort": "low",
+  "max_output_tokens": 256,
+  "model_timeout_seconds": 45,
+  "run_mode": "continuous",
+  "transition_timeout_seconds": 20,
+  "between_levels_seconds": 1.0
+}
