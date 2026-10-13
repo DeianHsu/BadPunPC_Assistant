@@ -45,6 +45,8 @@ DeepSeek 的思考强度对应“低”=`low`、“高”=`high`、“最高”=
 
 配置保存到程序旁的 `config.local.json`，保存后用于下一次开始解题。密钥留空时，MiMo 读取 `MIMO_API_KEY` 环境变量，其他接口按配置读取密钥环境变量，默认为 `DEEPSEEK_API_KEY`。日志与历史保存在程序旁的 `runs` 文件夹；发行包不包含个人密钥或运行日志。
 
+源码仓库保留程序源码、依赖清单、使用说明及空密钥示例配置。测试文件、检查报告、构建产物、本地配置和运行日志留在本地，不纳入版本控制；打包好的程序仅通过发行版提供下载。
+
 ## 技术栈
 
 | 技术 | 用途 |
@@ -149,7 +151,6 @@ python desktop.py
 | `desktop.py` | 桌面界面 |
 | `build_app.py` | 程序和便携压缩包的构建 |
 | `config.example.json` | 默认配置 |
-| `tests/` | 针对性流程验证 |
 
 安装构建依赖后打包：
 
@@ -159,12 +160,6 @@ python build_app.py
 ```
 
 生成 `release/BadPunPC_Assistant.exe`，GitHub 发行版仅上传这个文件。构建时另保留使用说明、第三方许可证及本地便携压缩包。窗口模式不创建终端；普通窗口启动器缺失时可以使用 PyInstaller 已安装的官方窗口诊断启动器。`python build_app.py --folder` 生成目录预览包。
-
-检查不连接游戏、不调用外部模型的成品启动流程：
-
-```powershell
-.\release\BadPunPC_Assistant.exe --smoke-test .\build\smoke.json
-```
 
 ## 支持范围与验证
 
