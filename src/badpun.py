@@ -19,7 +19,9 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
-RESOURCES = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+SOURCE = Path(__file__).resolve().parent
+RESOURCES = Path(getattr(sys, "_MEIPASS", SOURCE.parent))
+AGENT_PATH = Path(getattr(sys, "_MEIPASS", SOURCE)) / "agent.js"
 ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else RESOURCES
 if (ROOT / ".runtime").is_dir():
     sys.path.insert(0, str(ROOT / ".runtime"))
@@ -57,11 +59,11 @@ class GameBridge:
             pid = matches[0].pid
         library = RESOURCES / "node_modules/frida-il2cpp-bridge/dist/index.js"
         if not library.exists():
-            raise RuntimeError("缺少桥接依赖；请先运行安装依赖.ps1")
+            raise RuntimeError("缺少桥接依赖；请在项目根目录运行 npm ci --ignore-scripts")
         self.session = device.attach(pid)
         self.session.on("detached", self._on_detached)
         try:
-            source = library.read_text(encoding="utf-8") + "\n" + (RESOURCES / "agent.js").read_text(encoding="utf-8")
+            source = library.read_text(encoding="utf-8") + "\n" + AGENT_PATH.read_text(encoding="utf-8")
             self.script = self.session.create_script(source)
             self.script.on("message", self._on_message)
             self.script.load()

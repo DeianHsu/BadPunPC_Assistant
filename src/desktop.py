@@ -450,7 +450,7 @@ def smoke_test(output: Path):
               "run_mode_disabled_background": ttk.Style(root).lookup("RunMode.TCombobox", "fieldbackground", ("disabled",)),
               "model_transport_available": bool(local_response.get("choices")),
               "frida_version": frida.__version__, "pillow_available": Image is not None,
-              "agent_resource": (badpun.RESOURCES / "agent.js").exists(),
+              "agent_resource": badpun.AGENT_PATH.exists(),
               "bridge_resource": (badpun.RESOURCES / "node_modules/frida-il2cpp-bridge/dist/index.js").exists()}
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     root.destroy()

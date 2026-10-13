@@ -39,6 +39,25 @@
 
 连接成功后可以最小化游戏，但游戏需保持运行。
 
+## 从 Python 文件运行
+
+下载或克隆本项目源码，准备64位 Python 3.12或更新版本（包含 Tkinter），以及 Node.js 和 npm。在项目根目录打开 PowerShell，首次运行执行：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+npm ci --ignore-scripts
+.\.venv\Scripts\python.exe .\src\desktop.py
+```
+
+以后启动只需在项目根目录执行：
+
+```powershell
+.\.venv\Scripts\python.exe .\src\desktop.py
+```
+
+打开窗口后，按照上面的步骤填写模型配置、连接游戏并开始解题。源码运行的配置和答题历史保存在项目根目录的 `config.local.json` 和 `runs` 文件夹。
+
 ## 模型配置
 
 | 服务 | 接口地址 | 模型名称 |
@@ -55,7 +74,7 @@
 - “验证接口并读取模型”可读取服务提供的模型列表，也可手动填写模型名称。
 - “导入已有配置”可复用之前的配置文件。
 
-配置保存在程序同目录的 `config.local.json`，保存后在下一次开始解题时生效。
+免安装版的配置保存在程序同目录的 `config.local.json`；源码运行时保存在项目根目录。保存后在下一次开始解题时生效。
 
 ## 升级与问题排查
 

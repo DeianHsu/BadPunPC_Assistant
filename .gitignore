@@ -1,6 +1,7 @@
 # 依赖、缓存及构建产物
 node_modules/
 .runtime/
+.venv/
 .npm-cache/
 .build-deps/
 __pycache__/

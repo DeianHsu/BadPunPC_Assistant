@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parent
+SOURCE = Path(__file__).resolve().parent
+ROOT = SOURCE.parent
 APP_NAME = "BadPunPC_Assistant"
 sys.path[:0] = [str(ROOT / ".build-deps"), str(ROOT / ".runtime")]
 os.environ["PYTHONPATH"] = os.pathsep.join([str(ROOT / ".build-deps"), str(ROOT / ".runtime")])
@@ -15,12 +16,12 @@ from PyInstaller.__main__ import run
 
 mode = "--onedir" if "--folder" in sys.argv else "--onefile"
 dist = ROOT / ("build/preview" if mode == "--onedir" else "release")
-args = ["desktop.py", mode, "--name", APP_NAME, "--noconfirm", "--noupx",
+args = [str(SOURCE / "desktop.py"), mode, "--name", APP_NAME, "--noconfirm", "--noupx",
         "--windowed", "--distpath", str(dist),
         "--workpath", str(ROOT / "build/pyinstaller"), "--specpath", str(ROOT / "build"),
-        "--paths", str(ROOT / ".runtime"), "--collect-all", "frida",
+        "--paths", str(SOURCE), "--paths", str(ROOT / ".runtime"), "--collect-all", "frida",
         "--hidden-import", "anyio._backends._asyncio",
-        "--add-data", str(ROOT / "config.example.json") + ":.", "--add-data", str(ROOT / "agent.js") + ":.",
+        "--add-data", str(ROOT / "config.example.json") + ":.", "--add-data", str(SOURCE / "agent.js") + ":.",
         "--add-data", str(ROOT / "node_modules/frida-il2cpp-bridge/dist/index.js") + ":node_modules/frida-il2cpp-bridge/dist",
         "--log-level", "WARN"]
 bootloaders = ROOT / ".build-deps/PyInstaller/bootloader" / PLATFORM
