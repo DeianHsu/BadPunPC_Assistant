@@ -11,13 +11,14 @@ from desktop_service import validate_config, simple_model_config, save_config, D
 
 
 class DesktopTests(unittest.TestCase):
-    def test_legacy_model_options_are_reset_and_thinking_stays_off(self):
+    def test_hidden_options_reset_but_user_thinking_choices_are_preserved(self):
         old = {**badpun.DEFAULTS, "thinking_enabled": True, "reasoning_effort": "max",
                "temperature": 1.8, "model_timeout_seconds": 500, "max_output_tokens": 65536,
                "model": "custom-vision", "api_key": "test-only-key", "run_mode": "current", "max_levels_per_run": 7}
         simple = simple_model_config(old)
-        self.assertFalse(simple["thinking_enabled"])
-        for key in ("temperature", "model_timeout_seconds", "max_output_tokens", "reasoning_effort"):
+        self.assertTrue(simple["thinking_enabled"])
+        self.assertEqual(simple["reasoning_effort"], "max")
+        for key in ("temperature", "model_timeout_seconds", "max_output_tokens"):
             self.assertEqual(simple[key], badpun.DEFAULTS[key])
         self.assertEqual(simple["model"], old["model"])
         self.assertEqual(simple["api_key"], old["api_key"])
@@ -27,7 +28,7 @@ class DesktopTests(unittest.TestCase):
     def test_generic_endpoint_selects_compatible_protocol_automatically(self):
         config = simple_model_config({**badpun.DEFAULTS, "model_base_url": "https://example.com/v1"})
         self.assertEqual(config["provider"], "compatible")
-        self.assertFalse(config["thinking_enabled"])
+        self.assertTrue(config["thinking_enabled"])
 
     def test_ten_question_mode_is_valid_and_saved(self):
         config = simple_model_config({**badpun.DEFAULTS, "run_mode": "ten"})
@@ -35,6 +36,13 @@ class DesktopTests(unittest.TestCase):
             path = Path(folder) / "config.local.json"
             save_config(path, config)
             self.assertEqual(badpun.load_config(path)["run_mode"], "ten")
+
+    def test_official_mimo_endpoint_selects_mimo_and_keeps_disabled_choice(self):
+        config = simple_model_config({**badpun.DEFAULTS, "model_base_url": "https://api.xiaomimimo.com/v1",
+                                      "model": "mimo-v2.6-pro", "thinking_enabled": False})
+        self.assertEqual(config["provider"], "mimo")
+        self.assertEqual(config["api_key_env"], "MIMO_API_KEY")
+        self.assertFalse(config["thinking_enabled"])
 
     def test_config_roundtrip_keeps_user_fields_and_disabled_thinking(self):
         config = {**badpun.DEFAULTS, "model_base_url": "https://example.com/v1/", "model": "vision-test",

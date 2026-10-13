@@ -19,6 +19,7 @@ PHASES = {"idle": "待命", "starting": "准备开始", "reading": "读取题面
           "stopping": "正在停止", "stopped": "已停止", "error": "需要处理"}
 PHASES.update(retrying="请求超时／网络重试中", restarting="重开当前关卡")
 RUN_MODE_LABELS = {"current": "猜1题", "ten": "猜10题", "continuous": "一直猜"}
+THINKING_LEVEL_LABELS = {"off": "关闭", "low": "低", "high": "高", "max": "最高"}
 APP_NAME = "BadPunPC_Assistant"
 
 
@@ -153,7 +154,7 @@ class DesktopApp:
         ttk.Button(buttons, text="打开日志目录", command=self.open_logs).pack(side="right")
         self.last_answer = tk.StringVar(value="最近提交：—")
         ttk.Label(self.run_page, textvariable=self.last_answer, wraplength=920).pack(anchor="w")
-        self.feedback = tk.StringVar(value="灰色：答案中没有，后续排除；橙色：存在但位置不对；绿色：位置正确。")
+        self.feedback = tk.StringVar(value="灰色排除；同项有橙／绿色时忽略灰色；橙色换位；绿色固定位置。")
         ttk.Label(self.run_page, textvariable=self.feedback, style="Muted.TLabel", wraplength=920).pack(anchor="w", pady=(4, 12))
         log_frame = ttk.LabelFrame(self.run_page, text="运行日志", style="Card.TLabelframe")
         log_frame.pack(fill="both", expand=True)
@@ -178,11 +179,13 @@ class DesktopApp:
         server.pack(fill="x")
         server.columnconfigure(1, weight=1)
         self.field(server, 0, "接口地址", "model_base_url")
-        self.model_entry = self.field(server, 1, "模型名称", "model", ["deepseek-flash"])
+        self.model_entry = self.field(server, 1, "模型名称", "model", ["deepseek-flash", "mimo-v2.6-pro"])
         self.key_entry = self.field(server, 2, "接口密钥", "api_key", secret=True)
         self.show_key = tk.BooleanVar(value=False)
         ttk.Checkbutton(server, text="显示", variable=self.show_key, command=lambda: self.key_entry.configure(show="" if self.show_key.get() else "●")).grid(row=2, column=2, padx=(10, 0))
-        ttk.Label(self.model_form, text="其他参数使用默认值，推理模式关闭。", style="Muted.TLabel").pack(anchor="w", pady=14)
+        self.thinking_entry = self.field(server, 3, "思考强度", "thinking_level", list(THINKING_LEVEL_LABELS.values()))
+        self.thinking_entry.configure(state="readonly", style="RunMode.TCombobox")
+        ttk.Label(self.model_form, text="默认开启高强度思考；模型只返回一个答案。其他参数使用默认值。", style="Muted.TLabel").pack(anchor="w", pady=14)
         actions = ttk.Frame(self.model_form)
         actions.pack(fill="x", pady=(2, 10))
         ttk.Button(actions, text="保存配置", style="Primary.TButton", command=self.save).pack(side="left")
@@ -194,14 +197,21 @@ class DesktopApp:
     def set_form(self, config):
         config = {**badpun.DEFAULTS, **config}
         for key, variable in self.variables.items():
-            value = config[key]
-            if key == "run_mode":
-                value = RUN_MODE_LABELS[value]
+            if key == "thinking_level":
+                value = THINKING_LEVEL_LABELS[config["reasoning_effort"] if config["thinking_enabled"] else "off"]
+            else:
+                value = config[key]
+                if key == "run_mode":
+                    value = RUN_MODE_LABELS[value]
             variable.set(value)
 
     def get_config(self):
         result = {**self.config, **{key: variable.get() for key, variable in self.variables.items()}}
         result["run_mode"] = {label: mode for mode, label in RUN_MODE_LABELS.items()}[result["run_mode"]]
+        level = {label: mode for mode, label in THINKING_LEVEL_LABELS.items()}[result.pop("thinking_level")]
+        result["thinking_enabled"] = level != "off"
+        if level != "off":
+            result["reasoning_effort"] = level
         return simple_model_config(result)
 
     def save(self):
@@ -308,7 +318,17 @@ class DesktopApp:
         if history:
             names = {"correct_position": "位置正确", "present_elsewhere": "存在、位置不对", "absent": "不存在"}
             letters = history[-1]["letters"]
-            self.feedback.set("最近反馈：" + "；".join(f"{item['character']}：字{names.get(item.get('character_feedback'), '—')}，拼音{names.get(item.get('pinyin_feedback'), '—')}" for item in letters))
+            limits = badpun.feedback_constraints({"feedback_history": history}, [])
+            def feedback_name(item, kind):
+                state = item.get(kind + "_feedback")
+                value = item.get(kind, "")
+                if kind == "pinyin":
+                    value = value.rstrip("12345")
+                required = limits["required_characters" if kind == "character" else "required_pinyins"]
+                if state == "absent" and value in required:
+                    return "灰色已忽略"
+                return names.get(state, "—")
+            self.feedback.set("最近反馈：" + "；".join(f"{item['character']}：字{feedback_name(item, 'character')}，拼音{feedback_name(item, 'pinyin')}" for item in letters))
         if runner.get("error"):
             self.notice.set(runner["error"])
         elif runner.get("phase") == "retrying":
@@ -389,6 +409,11 @@ def smoke_test(output: Path):
     for mode in RUN_MODE_LABELS:
         app.set_form({**config, "run_mode": mode})
         mode_roundtrips[mode] = app.get_config()["run_mode"] == mode
+    thinking_roundtrips = {}
+    for level in THINKING_LEVEL_LABELS:
+        app.variables["thinking_level"].set(THINKING_LEVEL_LABELS[level])
+        selected = app.get_config()
+        thinking_roundtrips[level] = selected["thinking_enabled"] == (level != "off") and (level == "off" or selected["reasoning_effort"] == level)
     app.set_form(config)
     root.update_idletasks()
     class LocalModel(BaseHTTPRequestHandler):
@@ -415,7 +440,9 @@ def smoke_test(output: Path):
               "app_name": APP_NAME, "window_title": root.title(),
               "console_attached": bool(ctypes.windll.kernel32.GetConsoleWindow()) if sys.platform == "win32" else None,
               "standard_streams_unavailable": all(stream is None for stream in (sys.stdin, sys.stdout, sys.stderr)),
-              "thinking_enabled": loaded["thinking_enabled"], "config_roundtrip": loaded == config,
+              "thinking_enabled": loaded["thinking_enabled"], "reasoning_effort": loaded["reasoning_effort"],
+              "thinking_options": list(app.thinking_entry["values"]), "thinking_roundtrips": thinking_roundtrips,
+              "config_roundtrip": loaded == config,
               "model_fields": sorted(set(app.variables) - {"run_mode"}),
               "run_mode": loaded["run_mode"],
               "run_mode_options": list(app.run_mode_picker["values"]), "run_mode_roundtrips": mode_roundtrips,

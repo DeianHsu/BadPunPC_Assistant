@@ -28,6 +28,54 @@ def puzzle():
 
 
 class FeedbackTests(unittest.TestCase):
+    def test_mixed_gray_and_green_ignores_gray_and_keeps_green_position(self):
+        case = {"expected_length": 4, "feedback_history": [{"guess": "无拘无束", "letters": [
+            {"position": 1, "character": "无", "pinyin": "wu2", "character_feedback": "correct_position", "pinyin_feedback": "correct_position"},
+            {"position": 2, "character": "拘", "pinyin": "ju1", "character_feedback": "absent", "pinyin_feedback": "absent"},
+            {"position": 3, "character": "无", "pinyin": "wu2", "character_feedback": "absent", "pinyin_feedback": "absent"},
+            {"position": 4, "character": "束", "pinyin": "shu4", "character_feedback": "absent", "pinyin_feedback": "absent"}]}]}
+        rules = badpun.feedback_constraints(case, [])
+        self.assertNotIn("无", rules["excluded_characters"])
+        self.assertNotIn("wu", rules["excluded_pinyins"])
+        self.assertNotIn("无", rules["max_character_counts"])
+        self.assertNotIn("wu", rules["max_pinyin_counts"])
+        self.assertNotIn("无", rules["forbidden_positions"])
+        self.assertNotIn("wu", rules["forbidden_pinyin_positions"])
+        badpun.check_prediction("无所适从", case, [], [["wu2"], ["suo3"], ["shi4"], ["cong2"]])
+        badpun.check_prediction("无甲无乙", case, [], [["wu2"], ["jia3"], ["wu2"], ["yi3"]])
+        with self.assertRaisesRegex(badpun.PredictionError, "第 1 字"):
+            badpun.check_prediction("甲无乙丙", case, [])
+        badpun.check_prediction("无武适从", case, [], [["wu2"], ["wu3"], ["shi4"], ["cong2"]])
+        info = badpun.model_constraints(rules)
+        self.assertEqual(info["汉字"]["固定位置"], {"1": "无"})
+        self.assertEqual(info["拼音"]["固定位置"], {"1": "wu"})
+        self.assertNotIn("数量", info["汉字"])
+        self.assertNotIn("数量", info["拼音"])
+
+    def test_mixed_gray_and_orange_across_history_preserves_only_orange_constraints(self):
+        orange = {"answer": "马甲乙", "letters": [{"position": 1, "character": "马", "pinyin": "ma3",
+                  "character_feedback": "present_elsewhere", "pinyin_feedback": "present_elsewhere"}]}
+        gray = {"answer": "甲马马", "letters": [{"position": position, "character": "马", "pinyin": "ma3",
+                "character_feedback": "absent", "pinyin_feedback": "absent"} for position in (2, 3)]}
+        for live, saved in ((orange, gray), (gray, orange)):
+            with self.subTest(live=live["answer"]):
+                case = {"expected_length": 3, "feedback_history": [live]}
+                rules = badpun.feedback_constraints(case, [saved])
+                self.assertNotIn("马", rules["excluded_characters"])
+                self.assertNotIn("ma", rules["excluded_pinyins"])
+                self.assertNotIn("马", rules["max_character_counts"])
+                self.assertNotIn("ma", rules["max_pinyin_counts"])
+                self.assertEqual(rules["forbidden_positions"], {"马": [1]})
+                self.assertEqual(rules["forbidden_pinyin_positions"], {"ma": [1]})
+                info = badpun.model_constraints(rules)
+                self.assertEqual(info["汉字"]["数量"], {"马": {"至少": 1}})
+                self.assertEqual(info["拼音"]["数量"], {"ma": {"至少": 1}})
+                badpun.check_prediction("河马马", case, [saved], [["he2"], ["ma3"], ["ma3"]])
+                with self.assertRaisesRegex(badpun.PredictionError, "第 1 位"):
+                    badpun.check_prediction("马河马", case, [saved])
+                with self.assertRaisesRegex(badpun.PredictionError, "第 1 位不能读"):
+                    badpun.check_prediction("麻河马", case, [saved], [["ma2"], ["he2"], ["ma3"]])
+
     def test_known_failed_word_is_reported_as_duplicate(self):
         with self.assertRaises(badpun.PredictionError) as caught:
             badpun.check_prediction("财源广进", puzzle(), [])

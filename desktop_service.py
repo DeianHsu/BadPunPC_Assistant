@@ -10,16 +10,16 @@ import badpun
 
 
 def simple_model_config(config: dict) -> dict:
-    """Keep the three model inputs; normalize hidden options even after a legacy import."""
+    """Keep visible model and thinking choices; normalize the remaining hidden options."""
     result = {**badpun.DEFAULTS, **config}
-    for key in ("api_key_env", "thinking_enabled", "reasoning_effort", "temperature",
+    for key in ("api_key_env", "temperature",
                 "model_timeout_seconds", "max_output_tokens"):
         result[key] = badpun.DEFAULTS[key]
-    result["thinking_enabled"] = False
     for obsolete in ("max_levels_per_run", "max_attempts_per_level"):
         result.pop(obsolete, None)
-    hostname = urlsplit(str(result["model_base_url"]).strip()).hostname
-    result["provider"] = "deepseek" if hostname == "api.deepseek.com" else "compatible"
+    result["provider"] = badpun.provider_for_url(str(result["model_base_url"]))
+    if result["provider"] == "mimo":
+        result["api_key_env"] = "MIMO_API_KEY"
     return validate_config(result)
 
 
@@ -34,7 +34,7 @@ def validate_config(config: dict) -> dict:
     result["model"] = str(result["model"]).strip()
     if not result["model"]:
         raise ValueError("请填写模型名称")
-    if result["provider"] not in ("deepseek", "compatible"):
+    if result["provider"] not in ("deepseek", "mimo", "compatible"):
         raise ValueError("请选择接口类型")
     ranges = {"model_timeout_seconds": (10, 600), "max_output_tokens": (128, 131072)}
     labels = {"model_timeout_seconds": "请求超时", "max_output_tokens": "输出令牌上限"}

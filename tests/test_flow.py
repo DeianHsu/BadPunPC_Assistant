@@ -117,7 +117,8 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(result["answer"], "纽约")
         self.assertNotIn("reason", result)
         self.assertEqual([block["type"] for block in captured[0]["messages"][1]["content"]], ["text", "image_url", "image_url"])
-        self.assertEqual(captured[0]["thinking"], {"type": "disabled"})
+        self.assertEqual(captured[0]["thinking"], {"type": "enabled"})
+        self.assertEqual(captured[0]["reasoning_effort"], "high")
         self.assertNotIn("api_key", json.dumps(captured))
 
     def test_no_game_confirmation_stops_instead_of_guessing_again(self):
