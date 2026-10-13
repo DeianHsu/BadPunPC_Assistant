@@ -27,3 +27,9 @@ tests/
 test_*.py
 *-smoke.json
 .pytest_cache/
+
+# 本地辅助脚本与重复说明
+便携版使用说明.txt
+启动服务.ps1
+安装依赖.ps1
+控制.ps1

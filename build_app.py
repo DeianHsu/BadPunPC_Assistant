@@ -37,7 +37,7 @@ for module in ["numpy", "scipy", "pandas", "matplotlib", "torch", "tensorflow", 
     args += ["--exclude-module", module]
 run(args)
 if mode == "--onefile":
-    shutil.copyfile(ROOT / "便携版使用说明.txt", dist / "使用说明.txt")
+    shutil.copyfile(ROOT / "README.md", dist / "使用说明.md")
     license_paths = [ROOT / "node_modules/frida-il2cpp-bridge/LICENSE",
                      ROOT / ".runtime/frida-17.23.3.dist-info/licenses/COPYING",
                      ROOT / ".build-deps/pyinstaller-6.22.3.dist-info/licenses/COPYING.txt"]
@@ -53,6 +53,6 @@ if mode == "--onefile":
     (dist / "第三方许可证.txt").write_text("\n".join(notices), encoding="utf-8")
     with zipfile.ZipFile(dist / f"{APP_NAME}-portable.zip", "w", zipfile.ZIP_DEFLATED) as archive:
         # Deliberately exclude local credentials and user run logs from the distributable.
-        for name in [f"{APP_NAME}.exe", "使用说明.txt", "第三方许可证.txt"]:
+        for name in [f"{APP_NAME}.exe", "使用说明.md", "第三方许可证.txt"]:
             archive.write(dist / name, name)
 print("构建完成：", dist)
