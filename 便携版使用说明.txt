@@ -1,7 +1,9 @@
-这是谐音梗 · 自动解题助手（Windows 64 位免安装版）
+BadPunPC_Assistant（Windows 64 位免安装版）
+《这是谐音梗》自动解题助手
+游戏商店：https://store.steampowered.com/app/4164310/_/
 
 使用步骤
-1. 双击“这是谐音梗助手.exe”，直接显示助手窗口，不创建终端窗口。无需另装 Python 或 Node.js。
+1. 解压 BadPunPC_Assistant-portable.zip，双击“BadPunPC_Assistant.exe”，直接显示助手窗口，不创建终端窗口。无需另装 Python 或 Node.js。
 2. 打开“视觉语言模型（VLM）配置”分页，填写接口地址、模型名称和接口密钥，点击“保存配置”。
    只需填写这三项。默认使用 DeepSeek 的 deepseek-flash，推理模式关闭，其他模型参数使用默认值。
    “验证接口并读取模型”只读取模型列表，不会提交游戏答案。

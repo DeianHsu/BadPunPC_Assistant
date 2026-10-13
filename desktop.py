@@ -19,6 +19,7 @@ PHASES = {"idle": "待命", "starting": "准备开始", "reading": "读取题面
           "stopping": "正在停止", "stopped": "已停止", "error": "需要处理"}
 PHASES.update(retrying="请求超时／网络重试中", restarting="重开当前关卡")
 RUN_MODE_LABELS = {"current": "猜1题", "ten": "猜10题", "continuous": "一直猜"}
+APP_NAME = "BadPunPC_Assistant"
 
 
 def configure_tk():
@@ -59,7 +60,7 @@ class DesktopApp:
         self.log_handler = QueueLog(self.messages)
         logging.getLogger("badpun").addHandler(self.log_handler)
         logging.getLogger("badpun").setLevel(logging.INFO)
-        root.title("这是谐音梗 · 自动解题助手")
+        root.title(APP_NAME)
         root.geometry("1020x900")
         root.minsize(940, 720)
         root.configure(bg="#f3f6fb")
@@ -107,7 +108,7 @@ class DesktopApp:
     def build(self):
         shell = ttk.Frame(self.root, padding=22)
         shell.pack(fill="both", expand=True)
-        ttk.Label(shell, text="这是谐音梗 · 自动解题助手", style="Title.TLabel").pack(anchor="w")
+        ttk.Label(shell, text=APP_NAME, style="Title.TLabel").pack(anchor="w")
         ttk.Label(shell, text="识别题面 → 结合字与拼音反馈猜答案 → 自动提交并进入下一题", style="Muted.TLabel").pack(anchor="w", pady=(4, 16))
         self.notice = tk.StringVar(value="先填写模型配置，再启动游戏进入单人图片题，点击“连接游戏”。")
         self.notice_label = ttk.Label(shell, textvariable=self.notice, style="Muted.TLabel", wraplength=950)
@@ -411,6 +412,7 @@ def smoke_test(output: Path):
         server.shutdown()
         server.server_close()
     result = {"pages": [app.tabs.tab(tab, "text") for tab in app.tabs.tabs()],
+              "app_name": APP_NAME, "window_title": root.title(),
               "console_attached": bool(ctypes.windll.kernel32.GetConsoleWindow()) if sys.platform == "win32" else None,
               "standard_streams_unavailable": all(stream is None for stream in (sys.stdin, sys.stdout, sys.stderr)),
               "thinking_enabled": loaded["thinking_enabled"], "config_roundtrip": loaded == config,

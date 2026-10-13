@@ -6,6 +6,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
+APP_NAME = "BadPunPC_Assistant"
 sys.path[:0] = [str(ROOT / ".build-deps"), str(ROOT / ".runtime")]
 os.environ["PYTHONPATH"] = os.pathsep.join([str(ROOT / ".build-deps"), str(ROOT / ".runtime")])
 os.environ["TCL_LIBRARY"] = str(Path(sys.base_prefix) / "tcl/tcl8.6")
@@ -16,7 +17,7 @@ from PyInstaller.__main__ import run
 
 mode = "--onedir" if "--folder" in sys.argv else "--onefile"
 dist = ROOT / ("build/preview" if mode == "--onedir" else "release")
-args = ["desktop.py", mode, "--name", "这是谐音梗助手", "--noconfirm", "--noupx",
+args = ["desktop.py", mode, "--name", APP_NAME, "--noconfirm", "--noupx",
         "--windowed", "--distpath", str(dist),
         "--workpath", str(ROOT / "build/pyinstaller"), "--specpath", str(ROOT / "build"),
         "--paths", str(ROOT / ".runtime"), "--collect-all", "frida",
@@ -50,8 +51,8 @@ if mode == "--onefile":
         if path.exists():
             notices.append(f"\n--- {path.parent.parent.name} / {path.name} ---\n" + path.read_text(encoding="utf-8"))
     (dist / "第三方许可证.txt").write_text("\n".join(notices), encoding="utf-8")
-    with zipfile.ZipFile(dist / "这是谐音梗助手-便携版.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(dist / f"{APP_NAME}-portable.zip", "w", zipfile.ZIP_DEFLATED) as archive:
         # Deliberately exclude local credentials and user run logs from the distributable.
-        for name in ["这是谐音梗助手.exe", "使用说明.txt", "第三方许可证.txt"]:
+        for name in [f"{APP_NAME}.exe", "使用说明.txt", "第三方许可证.txt"]:
             archive.write(dist / name, name)
 print("构建完成：", dist)

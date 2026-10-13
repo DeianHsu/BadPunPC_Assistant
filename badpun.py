@@ -1,4 +1,4 @@
-"""《这是谐音梗》本地 API 与视觉模型自动解题器。"""
+"""BadPunPC_Assistant：《这是谐音梗》本地 API 与视觉模型自动解题助手。"""
 from __future__ import annotations
 
 import argparse

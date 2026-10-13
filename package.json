@@ -1,8 +1,8 @@
 {
-  "name": "badpun-auto-solver",
+  "name": "badpunpc-assistant",
   "version": "0.1.0",
   "private": true,
-  "description": "《这是谐音梗》本地接口与 DeepSeek 自动解题程序",
+  "description": "BadPunPC_Assistant：《这是谐音梗》本地接口与视觉模型自动解题助手",
   "dependencies": {
     "frida-il2cpp-bridge": "0.14.0"
   }
